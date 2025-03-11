@@ -32,7 +32,7 @@
             userInputField.value = ""; // Clear input field immediately
 
             // Send message to FastAPI chatbot
-            let response = await fetch("https://olu-chatbot.onrender.com", {
+            let response = await fetch("https://olu-chatbot.onrender.com/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ message: userInput })
