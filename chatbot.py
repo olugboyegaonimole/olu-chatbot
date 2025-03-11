@@ -15,7 +15,8 @@ app.add_middleware(
 )
 
 # Load chatbot model
-chatbot = pipeline("conversational", model="facebook/blenderbot-400M-distill")
+chatbot = pipeline("text2text-generation", model="facebook/blenderbot-400M-distill")
+
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
