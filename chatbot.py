@@ -12,16 +12,16 @@ model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
 # Initialize FastAPI
 app = FastAPI()
 
-# Enable CORS (Cross-Origin Resource Sharing)
+# Enable CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Request model
+# Define request structure
 class ChatRequest(BaseModel):
     message: str
 
@@ -35,6 +35,6 @@ async def chat(request: ChatRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Run the app
+# Start app if running locally
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=10000)
