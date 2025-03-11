@@ -1,40 +1,38 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+from transformers import pipeline
 import uvicorn
 
-# Load the model and tokenizer
-MODEL_NAME = "facebook/blenderbot-400M-distill"
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
-
-# Initialize FastAPI
 app = FastAPI()
 
-# Enable CORS (Cross-Origin Resource Sharing)
+# Allow CORS (useful for frontend hosted separately)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*"],  # Allow all origins (change this for security)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Request model
-class ChatRequest(BaseModel):
-    message: str
+# Load chatbot model
+chatbot = pipeline("conversational", model="facebook/blenderbot-400M-distill")
 
-@app.post("/chat")
-async def chat(request: ChatRequest):
-    try:
-        inputs = tokenizer(request.message, return_tensors="pt")
-        output_ids = model.generate(**inputs)
-        response = tokenizer.decode(output_ids[0], skip_special_tokens=True)
-        return {"response": response}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        try:
+            # Receive message from client
+            data = await websocket.receive_text()
+            
+            # Generate chatbot response
+            response = chatbot(data)["generated_text"]
+            
+            # Send response back to client
+            await websocket.send_text(response)
+        except Exception:
+            await websocket.close()
+            break
 
-# Run the app
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
