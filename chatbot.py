@@ -25,6 +25,10 @@ app.add_middleware(
 class ChatRequest(BaseModel):
     message: str
 
+@app.get("/")
+def root():
+    return {"message": "Welcome to the Chatbot API!"}
+
 @app.post("/chat")
 async def chat(request: ChatRequest):
     try:
