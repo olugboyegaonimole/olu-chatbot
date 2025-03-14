@@ -20,35 +20,48 @@
         <button onclick="sendMessage()">Send</button>
     </div>
 
-    <script>
-        async function sendMessage() {
-            let userInputField = document.getElementById("user-input");
-            let userInput = userInputField.value;
-            if (!userInput) return;
-            
-            let chatBox = document.getElementById("chat-box");
-            chatBox.innerHTML += `<p><strong>You:</strong> ${userInput}</p>`;
 
-            userInputField.value = ""; // Clear input field immediately
+<script>
+async function sendMessage() {
+    let userInput = document.getElementById("user-input").value;
+    let chatBox = document.getElementById("chat-box");
 
-            // Send message to FastAPI chatbot
-            let response = await fetch("https://olu-chatbot.onrender.com/chat", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: userInput })
-            });
-            
-            let data = await response.json();
-            chatBox.innerHTML += `<p><strong>Bot:</strong> ${data.response}</p>`;
+    if (userInput.trim() === "") return; // Prevent empty messages
 
-            chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll
-        }
+    // Append User Message Instantly
+    chatBox.innerHTML += `<p><strong>You:</strong> ${userInput}</p>`;
+    document.getElementById("user-input").value = ""; // Clear input field
 
-        function handleKeyPress(event) {
-            if (event.key === "Enter") {
-                sendMessage();
-            }
-        }
-    </script>
+    // Show "Please wait..." Message
+    let waitingMessage = document.createElement("p");
+    waitingMessage.innerHTML = "<em>Bot is typing...</em>";
+    chatBox.appendChild(waitingMessage);
+
+    try {
+        let response = await fetch("https://olu-chatbot.onrender.com/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: userInput })
+        });
+
+        let data = await response.json();
+        chatBox.removeChild(waitingMessage); // Remove "Please wait..." message
+        chatBox.innerHTML += `<p><strong>Bot:</strong> ${data.response}</p>`; // Append bot's response
+    } catch (error) {
+        chatBox.removeChild(waitingMessage);
+        chatBox.innerHTML += `<p><strong>Bot:</strong> Error getting response.</p>`;
+    }
+}
+
+// Allow Enter Key to Send Messages
+document.getElementById("user-input").addEventListener("keypress", function(event) {
+    if (event.key === "Enter") {
+        sendMessage();
+    }
+});
+</script>
+
+
+
 </body>
 </html>
